@@ -63,12 +63,23 @@ class threatstack::configure {
       notice('Windows agent setup should be done at install time.')
     }
     default: {
+      $setup_args_content = "${cloudsight_bin} setup --deploy-key='${::threatstack::deploy_key}' --hostname='${::threatstack::ts_hostname}' ${full_setup_args}"
+      # this file tracks state and is used to notify
+      # Exec[threatstack-agent-configure] of the need to run.
+      file { "${confdir}/.setup_args":
+        ensure  => present,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0644',
+        content => $setup_args_content
+      }
+
       exec { 'threatstack-agent-setup':
-        command   => "${cloudsight_bin} setup --deploy-key='${::threatstack::deploy_key}' --hostname='${::threatstack::ts_hostname}' ${full_setup_args}",
-        subscribe => Package[$threatstack::ts_package],
-        creates   => "${confdir}/.audit",
-        path      => $::threatstack::binpath,
-        unless    => $::threatstack::setup_unless
+        command     => "systemctl stop threatstack && ${cloudsight_bin} setup --deploy-key='${::threatstack::deploy_key}' --hostname='${::threatstack::ts_hostname}' ${full_setup_args}",
+        subscribe   => [ Package[$threatstack::ts_package], File["${confdir}/.setup_args"] ],
+        refreshonly => true,
+        path        => $::threatstack::binpath,
+        unless      => $::threatstack::setup_unless
       }
     }
   }
