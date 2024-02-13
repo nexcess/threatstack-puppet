@@ -76,7 +76,7 @@ class threatstack::params {
           }
             $repo_url = "https://pkg.threatstack.com/v2/Amazon/${releasever}"
         }
-        /(CentOS|RedHat)/: {
+        /(CentOS|RedHat|Rocky)/: {
               $repo_url           = "https://pkg.threatstack.com/v2/EL/${::operatingsystemmajrelease}"
               $service_provider   = undef
         }
